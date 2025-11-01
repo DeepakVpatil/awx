@@ -1,0 +1,43 @@
+AWX:
+  enabled: true
+  AWX:
+    admin_user: admin
+    admin_password: password
+    secret_key: awxsecret
+    
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: awxpass
+    database: awx
+    username: awx
+    password: awxpass
+  primary:
+    persistence:
+      enabled: true
+      size: 8Gi
+      storageClass: managed-premium
+
+redis:
+  enabled: true
+  auth:
+    enabled: false
+
+service:
+  type: LoadBalancer
+  port: 80
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: awx.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: awx-tls
+      hosts:
+        - awx.example.com

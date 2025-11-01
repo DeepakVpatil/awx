@@ -1,0 +1,59 @@
+apiVersion: 2019-12-01
+location: eastus
+name: awx-container-group
+properties:
+  containers:
+  - name: awx-web
+    properties:
+      image: quay.io/ansible/awx:latest
+      resources:
+        requests:
+          cpu: 2
+          memoryInGb: 4
+      ports:
+      - port: 8052
+        protocol: TCP
+      environmentVariables:
+      - name: DATABASE_HOST
+        value: awx-postgres
+      - name: DATABASE_NAME
+        value: awx
+      - name: DATABASE_USER
+        value: awx
+      - name: DATABASE_PASSWORD
+        secureValue: awxpass
+  - name: awx-postgres
+    properties:
+      image: postgres:13
+      resources:
+        requests:
+          cpu: 1
+          memoryInGb: 2
+      ports:
+      - port: 5432
+        protocol: TCP
+      environmentVariables:
+      - name: POSTGRES_DB
+        value: awx
+      - name: POSTGRES_USER
+        value: awx
+      - name: POSTGRES_PASSWORD
+        secureValue: awxpass
+  - name: awx-redis
+    properties:
+      image: redis:latest
+      resources:
+        requests:
+          cpu: 0.5
+          memoryInGb: 1
+      ports:
+      - port: 6379
+        protocol: TCP
+  osType: Linux
+  ipAddress:
+    type: Public
+    ports:
+    - protocol: TCP
+      port: 8052
+    dnsNameLabel: awx-demo
+type: Microsoft.ContainerInstance/containerGroups
