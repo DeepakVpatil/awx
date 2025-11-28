@@ -1,28 +1,24 @@
 #!/bin/bash
 
-# Add AWX Helm repository
-helm repo add awx-operator https://ansible.github.io/awx-operator/
-helm repo update
+# Create Helm chart if not exists
+if [ ! -d "awx-operator-chart" ]; then
+  ./download-chart.sh
+fi
 
 # Create namespace
 kubectl create namespace awx
 
-# Install AWX using Helm
-helm install awx-operator awx-operator/awx-operator -n awx
+# Install AWX using local Helm chart
+helm install awx-operator ./awx-operator-chart -n awx -f values.yaml
+
 
 # Wait for operator to be ready
 kubectl wait --for=condition=available --timeout=300s deployment/awx-operator-controller-manager -n awx
 
-# Apply AWX instance
-kubectl apply -f - <<EOF
-apiVersion: awx.ansible.com/v1beta1
-kind: AWX
-metadata:
-  name: awx
-  namespace: awx
-spec:
-  service_type: LoadBalancer
-EOF
+# Wait for AWX instance to be ready (deployed by Helm chart)
+echo "Waiting for AWX instance to be ready..."
+kubectl wait --for=condition=Running --timeout=600s awx/awx -n awx
 
 echo "AWX installation completed. Check status with:"
 echo "kubectl get awx -n awx"
+echo "kubectl get pods -n awx"

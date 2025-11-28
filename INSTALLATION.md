@@ -1,223 +1,189 @@
-# AWX Environment Installation Guide
+# AWX Installation Guide
 
-This guide covers the installation of AWX across different environments using Terraform infrastructure as code.
+Comprehensive AWX deployment using Helm charts with customization options.
 
 ## Prerequisites
 
-- Azure CLI installed and configured
-- Terraform >= 1.0
-- kubectl
+- kubectl configured for target Kubernetes cluster
 - Helm >= 3.0
-- Azure subscription with appropriate permissions
+- Git (for chart download)
 
-## Environment Overview
+## Installation Methods
 
-| Environment | Node Count | VM Size | Kubernetes Version | Purpose |
-|-------------|------------|---------|-------------------|---------|
-| **dev** | 2 | Standard_B2s | 1.28 | Development and testing |
-| **nonprod** | 3 | Standard_D2s_v3 | 1.28 | Pre-production validation |
-| **prod** | 5 | Standard_D4s_v3 | 1.28 | Production workloads |
-
-## Installation Steps
-
-### 1. Authentication Setup
+### Method 1: Quick Deploy (Root Directory)
 
 ```bash
-# Login to Azure
-az login
-
-# Set subscription (if multiple subscriptions)
-az account set --subscription "your-subscription-id"
+# Simple deployment with default settings
+./deploy-awx.sh
 ```
 
-### 2. Environment-Specific Deployment
+**File**: `awx/deploy-awx.sh`
 
-#### Development Environment
+### Method 2: Customizable Helm Chart (Recommended)
+
+#### Step 1: Download Helm Chart
 
 ```bash
-cd environments/dev
-
-# Initialize Terraform
-terraform init
-
-# Review planned changes
-terraform plan
-
-# Deploy infrastructure
-terraform apply
+cd aks-helm
+./download-chart.sh
 ```
 
-**Configuration:**
-- Location: East US
-- Nodes: 2 x Standard_B2s
-- Namespace: awx-dev
-- Cost-optimized for development
+**File**: `awx/aks-helm/download-chart.sh`
 
-#### Non-Production Environment
+#### Step 2: Customize Configuration
+
+Edit `awx/aks-helm/values.yaml` for company-specific settings:
+
+```yaml
+# Example customizations
+image:
+  repository: "your-company-registry/awx-operator"
+  tag: "2.19.1-company"
+
+serviceAccount:
+  name: "company-awx-operator"
+  annotations:
+    company.com/owner: "platform-team"
+
+resources:
+  limits:
+    cpu: "1000m"
+    memory: "1Gi"
+
+AWX:
+  enabled: true
+  name: company-awx
+  spec:
+    service_type: LoadBalancer
+```
+
+**File**: `awx/aks-helm/values.yaml`
+
+#### Step 3: Deploy AWX
 
 ```bash
-cd environments/nonprod
-
-# Initialize Terraform
-terraform init
-
-# Review planned changes
-terraform plan
-
-# Deploy infrastructure
-terraform apply
+./install.sh
 ```
 
-**Configuration:**
-- Location: East US
-- Nodes: 3 x Standard_D2s_v3
-- Namespace: awx-nonprod
-- Balanced performance for testing
+**File**: `awx/aks-helm/install.sh`
 
-#### Production Environment
+## File Structure
+
+```
+awx/
+├── deploy-awx.sh                    # Quick deployment script
+├── aks-helm/
+│   ├── values.yaml                  # Main configuration file
+│   ├── install.sh                   # Customizable installation
+│   ├── download-chart.sh            # Chart download script
+│   └── awx-operator-chart/          # Helm chart directory
+└── COMPANY-CUSTOMIZATION.md         # Customization guide
+```
+
+## Verification
 
 ```bash
-cd environments/prod
+# Check AWX operator status
+kubectl get pods -n awx -l control-plane=controller-manager
 
-# Initialize Terraform
-terraform init
+# Check AWX instance status
+kubectl get awx -n awx
 
-# Review planned changes
-terraform plan
+# Check all AWX pods
+kubectl get pods -n awx
 
-# Deploy infrastructure
-terraform apply
-```
-
-**Configuration:**
-- Location: East US
-- Nodes: 5 x Standard_D4s_v3
-- Namespace: awx-prod
-- High availability and performance
-
-### 3. Post-Deployment Verification
-
-```bash
-# Get AKS credentials
-az aks get-credentials --resource-group awx-{environment}-rg --name awx-{environment}-aks
-
-# Verify cluster status
-kubectl get nodes
-
-# Check AWX pods
-kubectl get pods -n awx-{environment}
-
-# Get AWX service URL
-kubectl get svc -n awx-{environment}
-```
-
-## Environment Variables
-
-### Development
-```hcl
-location           = "East US"
-node_count         = 2
-vm_size           = "Standard_B2s"
-kubernetes_version = "1.28"
-awx_operator_version = "2.7.2"
-```
-
-### Non-Production
-```hcl
-location           = "East US"
-node_count         = 3
-vm_size           = "Standard_D2s_v3"
-kubernetes_version = "1.28"
-awx_operator_version = "2.7.2"
-```
-
-### Production
-```hcl
-location           = "East US"
-node_count         = 5
-vm_size           = "Standard_D4s_v3"
-kubernetes_version = "1.28"
-awx_operator_version = "2.7.2"
-```
-
-## Customization
-
-To customize deployment parameters, modify the `terraform.tfvars` file in each environment directory:
-
-```hcl
-# Example customization
-location           = "West US 2"
-node_count         = 4
-vm_size           = "Standard_D2s_v3"
-kubernetes_version = "1.29"
-awx_operator_version = "2.8.0"
+# View AWX logs
+kubectl logs -n awx -l app.kubernetes.io/name=awx
 ```
 
 ## Access AWX
 
-1. **Get admin password:**
-```bash
-kubectl get secret awx-admin-password -n awx-{environment} -o jsonpath="{.data.password}" | base64 --decode
-```
-
-2. **Port forward to access UI:**
-```bash
-kubectl port-forward svc/awx-service -n awx-{environment} 8080:80
-```
-
-3. **Access via browser:**
-- URL: http://localhost:8080
-- Username: admin
-- Password: (from step 1)
-
-## Cleanup
-
-To destroy the infrastructure:
+### Get Admin Credentials
 
 ```bash
-cd environments/{environment}
-terraform destroy
+# Get admin password
+kubectl get secret awx-admin-password -n awx -o jsonpath="{.data.password}" | base64 --decode
+
+# Get admin username (usually 'admin')
+kubectl get secret awx-admin-password -n awx -o jsonpath="{.data.username}" | base64 --decode
 ```
+
+### Access Methods
+
+#### Port Forward (Development)
+
+```bash
+# Port forward to access UI
+kubectl port-forward svc/awx-service -n awx 8080:80
+
+# Access via browser: http://localhost:8080
+```
+
+#### LoadBalancer (Production)
+
+```bash
+# Get external IP (if using LoadBalancer service type)
+kubectl get svc -n awx
+
+# Access via external IP on port 80
+```
+
+## Company Customization
+
+For company-specific configurations, see:
+- **File**: `awx/COMPANY-CUSTOMIZATION.md`
+- Covers private registries, security policies, resource limits
+- Node selection and company labeling standards
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Authentication errors:**
 ```bash
-az login --use-device-code
+# Check operator logs
+kubectl logs -n awx deployment/awx-operator-controller-manager
+
+# Check AWX instance events
+kubectl describe awx awx -n awx
+
+# Check persistent volume claims
+kubectl get pvc -n awx
+
+# Restart AWX operator
+kubectl rollout restart deployment/awx-operator-controller-manager -n awx
 ```
 
-2. **Terraform state issues:**
-```bash
-terraform refresh
-```
+### Resource Requirements
 
-3. **Kubernetes connection issues:**
-```bash
-az aks get-credentials --resource-group awx-{environment}-rg --name awx-{environment}-aks --overwrite-existing
-```
+- **Minimum**: 2 CPU cores, 4GB RAM
+- **Recommended**: 4 CPU cores, 8GB RAM
+- **Storage**: 20GB for PostgreSQL data
 
-### Logs and Monitoring
+## Cleanup
+
+### Remove AWX Instance Only
 
 ```bash
-# Check AWX operator logs
-kubectl logs -n awx-{environment} -l app.kubernetes.io/name=awx-operator
-
-# Check AWX instance logs
-kubectl logs -n awx-{environment} -l app.kubernetes.io/name=awx
+kubectl delete awx awx -n awx
 ```
 
-## Security Considerations
+### Complete Removal
 
-- All environments use Azure AD integration
-- Network security groups restrict access
-- TLS encryption enabled by default
-- Regular security updates via AWX operator
+```bash
+# Remove Helm release
+helm uninstall awx-operator -n awx
+
+# Delete namespace
+kubectl delete namespace awx
+
+# Remove CRDs (optional)
+kubectl delete crd awxs.awx.ansible.com
+kubectl delete crd awxbackups.awx.ansible.com
+kubectl delete crd awxrestores.awx.ansible.com
+```
 
 ## Support
 
-For issues and questions:
-1. Check Terraform logs: `terraform apply -auto-approve`
-2. Verify Azure permissions
-3. Review Kubernetes events: `kubectl get events -n awx-{environment}`
+- **AWX Documentation**: https://ansible.readthedocs.io/projects/awx/
+- **Operator Documentation**: https://ansible.readthedocs.io/projects/awx-operator/
+- **Helm Chart Issues**: Check `awx/aks-helm/awx-operator-chart/` for templates

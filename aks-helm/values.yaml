@@ -1,43 +1,60 @@
+# Custom AWX Operator Configuration
+
+replicaCount: 1
+
+image:
+  repository: quay.io/ansible/awx-operator 
+  pullPolicy: IfNotPresent
+  tag: "2.19.1"
+
+serviceAccount:
+  create: true
+  annotations:
+    kubernetes.io/managed-by: "helm"
+  name: "awx-operator"
+
+# Security Context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  capabilities:
+    drop:
+    - ALL
+
+# Resource Limits
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# AWX Configuration - Enable AWX deployment
 AWX:
   enabled: true
-  AWX:
-    admin_user: admin
-    admin_password: password
-    secret_key: awxsecret
+  name: awx
+  spec:
+    service_type: LoadBalancer
     
-postgresql:
-  enabled: true
-  auth:
-    postgresPassword: awxpass
-    database: awx
-    username: awx
-    password: awxpass
-  primary:
-    persistence:
-      enabled: true
-      size: 8Gi
-      storageClass: managed-premium
-
-redis:
-  enabled: true
-  auth:
-    enabled: false
-
-service:
-  type: LoadBalancer
-  port: 80
-
-ingress:
-  enabled: true
-  className: nginx
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-  hosts:
-    - host: awx.example.com
-      paths:
-        - path: /
-          pathType: Prefix
-  tls:
-    - secretName: awx-tls
-      hosts:
-        - awx.example.com
+  # COMPANY SPECIFIC: AWX instance configuration
+  # labels:
+  #   company.com/environment: "production"
+  #   company.com/team: "platform"
+  # annotations:
+  #   company.com/owner: "platform-team"
+  
+  # PostgreSQL configuration
+  postgres:
+    enabled: true
