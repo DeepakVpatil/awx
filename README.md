@@ -53,6 +53,12 @@ This repository contains multiple deployment methods for AWX (Ansible Web UI) on
 - **Deployment**: `az container create`
 - **Best for**: Quick testing, serverless approach
 
+### 9. Local Docker Desktop (`local/`)
+- **Method**: Docker Desktop Kubernetes
+- **Infrastructure**: Local Kubernetes cluster
+- **Deployment**: `./deploy-local.sh` or `deploy-local.bat`
+- **Best for**: Local development, testing, learning
+
 ## Environment Overview
 
 | Environment | Node Count | VM Size | Purpose |
@@ -95,6 +101,10 @@ az deployment group create --resource-group myRG --template-file bicep-deploymen
 
 # Azure Container Instances
 az container create --resource-group myRG --file azure-container-instances/awx-aci.yaml
+
+# Local Docker Desktop
+./deploy-local.sh        # Linux/macOS
+deploy-local.bat         # Windows
 ```
 
 ## Prerequisites

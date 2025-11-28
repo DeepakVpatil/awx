@@ -1,0 +1,74 @@
+# Local Development Configuration for AWX
+
+replicaCount: 1
+
+image:
+  repository: quay.io/ansible/awx-operator
+  pullPolicy: IfNotPresent
+  tag: "2.19.1"
+
+serviceAccount:
+  create: true
+  annotations:
+    kubernetes.io/managed-by: "helm"
+  name: "awx-operator-local"
+
+# Reduced resources for local development
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  capabilities:
+    drop:
+    - ALL
+
+# Minimal resources for local development
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# AWX Configuration for local development
+AWX:
+  enabled: true
+  name: awx-local
+  spec:
+    service_type: NodePort
+    
+    # Reduced resources for local development
+    web_resource_requirements:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+        
+    task_resource_requirements:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+    
+    # Single replica for local
+    web_replicas: 1
+    task_replicas: 1
+    
+  # Use built-in PostgreSQL for local development
+  postgres:
+    enabled: true

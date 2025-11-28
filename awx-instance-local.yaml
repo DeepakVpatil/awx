@@ -1,0 +1,14 @@
+apiVersion: awx.ansible.com/v1beta1
+kind: AWX
+metadata:
+  name: awx-local
+  namespace: awx
+spec:
+  service_type: NodePort
+  web_replicas: 1
+  task_replicas: 1
+  postgres_storage_requirements:
+    requests:
+      storage: 2Gi
+  projects_persistence: true
+  projects_storage_size: 1Gi

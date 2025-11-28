@@ -1,0 +1,35 @@
+# Local Docker Desktop Configuration
+replicaCount: 1
+
+image:
+  repository: quay.io/ansible/awx-operator
+  pullPolicy: IfNotPresent
+  tag: "2.19.1"
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+AWX:
+  enabled: true
+  name: awx-local
+  spec:
+    service_type: NodePort
+    web_resource_requirements:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+    task_resource_requirements:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
