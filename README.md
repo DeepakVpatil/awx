@@ -1,168 +1,166 @@
-# AWX Deployment Options on Azure
+# AWX on Kubernetes Deployment
 
-This repository contains multiple deployment methods for AWX (Ansible Web UI) on Azure infrastructure with support for multi-environment deployments and CI/CD automation.
+Production-ready AWX (Ansible Web UI) deployment on Kubernetes using Helm charts with enterprise customization support.
 
-## Deployment Methods
+## Overview
 
-### 1. Environment-Specific Terraform (`environments/`)
-- **Method**: Modular Infrastructure as Code
-- **Infrastructure**: Azure Kubernetes Service (AKS)
-- **Environments**: dev, nonprod, prod
-- **Deployment**: `cd environments/{env} && terraform apply`
-- **Best for**: Production-ready multi-environment deployments
+This repository provides a streamlined approach to deploy AWX on Kubernetes clusters, specifically optimized for Azure Kubernetes Service (AKS) with comprehensive customization options for enterprise environments.
 
-### 2. Airflow Automation (`airflow/`)
-- **Method**: Apache Airflow DAGs
-- **Infrastructure**: Automated AWX deployment pipeline
-- **Deployment**: Airflow web UI or API
-- **Best for**: CI/CD automation, scheduled deployments
+## Deployment Method
 
-### 3. AKS with AWX Operator (`aks-operator/`)
-- **Method**: Kubernetes Operator
-- **Infrastructure**: Azure Kubernetes Service (AKS)
-- **Deployment**: `kubectl apply -f aks-operator/`
-- **Best for**: Direct Kubernetes deployments
-
-### 4. AKS with Helm (`aks-helm/`)
-- **Method**: Helm Charts
-- **Infrastructure**: Azure Kubernetes Service (AKS)
+### Helm Chart Deployment (`aks-helm/`)
+- **Method**: Official AWX Operator Helm Chart
+- **Infrastructure**: Any Kubernetes cluster (AKS optimized)
 - **Deployment**: `./aks-helm/install.sh`
-- **Best for**: Simplified Kubernetes deployments
+- **Best for**: Production deployments with customization
 
-### 5. Azure VM with Docker Compose (`azure-vm/`)
-- **Method**: Docker Compose
-- **Infrastructure**: Azure Virtual Machine
-- **Deployment**: `docker-compose up -d`
-- **Best for**: Development, testing, single-node setups
+## Quick Start
 
-### 6. Terraform + AKS (`terraform-aks/`)
-- **Method**: Infrastructure as Code
-- **Infrastructure**: Azure Kubernetes Service (AKS)
-- **Deployment**: `terraform apply`
-- **Best for**: Single environment deployments
+### Prerequisites
+- kubectl configured for target Kubernetes cluster
+- Helm >= 3.0
+- Azure CLI (for AKS)
 
-### 7. Bicep + AKS (`bicep-deployment/`)
-- **Method**: Azure Resource Manager templates
-- **Infrastructure**: Azure Kubernetes Service (AKS)
-- **Deployment**: `az deployment group create`
-- **Best for**: Azure-native IaC approach
-
-### 8. Azure Container Instances (`azure-container-instances/`)
-- **Method**: Serverless containers
-- **Infrastructure**: Azure Container Instances (ACI)
-- **Deployment**: `az container create`
-- **Best for**: Quick testing, serverless approach
-
-### 9. Local Docker Desktop (`local/`)
-- **Method**: Docker Desktop Kubernetes
-- **Infrastructure**: Local Kubernetes cluster
-- **Deployment**: `./deploy-local.sh` or `deploy-local.bat`
-- **Best for**: Local development, testing, learning
-
-## Environment Overview
-
-| Environment | Node Count | VM Size | Purpose |
-|-------------|------------|---------|----------|
-| **dev** | 2 | Standard_B2s | Development and testing |
-| **nonprod** | 3 | Standard_D2s_v3 | Pre-production validation |
-| **prod** | 5 | Standard_D4s_v3 | Production workloads |
-
-## Quick Start Commands
-
-### Environment-Specific Deployment (Recommended)
+### Simple Deployment
 ```bash
-# Development environment
-cd environments/dev
-terraform init && terraform apply
-
-# Non-production environment
-cd environments/nonprod
-terraform init && terraform apply
-
-# Production environment
-cd environments/prod
-terraform init && terraform apply
+# Quick deployment with defaults
+./deploy-awx.sh
 ```
 
-### Alternative Deployment Methods
+### Customized Deployment (Recommended)
 ```bash
-# AKS Operator
-kubectl apply -f aks-operator/
+# Navigate to Helm directory
+cd aks-helm
 
-# Helm
-helm repo add awx-operator https://ansible.github.io/awx-operator/
-helm install awx awx-operator/awx-operator
+# Download Helm chart
+./download-chart.sh
 
-# Terraform (single environment)
-cd terraform-aks && terraform init && terraform apply
+# Customize configuration (optional)
+# Edit values.yaml for company-specific settings
 
-# Bicep
-az deployment group create --resource-group myRG --template-file bicep-deployment/main.bicep
-
-# Azure Container Instances
-az container create --resource-group myRG --file azure-container-instances/awx-aci.yaml
-
-# Local Docker Desktop
-./deploy-local.sh        # Linux/macOS
-deploy-local.bat         # Windows
+# Deploy AWX
+./install.sh
 ```
-
-## Prerequisites
-- Azure CLI installed and configured
-- Terraform >= 1.0
-- kubectl
-- Helm >= 3.0 (for Helm deployments)
-- Docker (for VM deployment)
-- Apache Airflow (for automated deployments)
-- Azure subscription with appropriate permissions
 
 ## Repository Structure
 
 ```
-├── airflow/                    # Airflow DAGs for automated deployment
-│   ├── dags/                   # Deployment DAGs
-│   └── environments/           # Environment-specific configs
-├── environments/               # Multi-environment Terraform
-│   ├── dev/                    # Development environment
-│   ├── nonprod/                # Non-production environment
-│   └── prod/                   # Production environment
-├── modules/                    # Reusable Terraform modules
-│   ├── aks-cluster/            # AKS cluster module
-│   ├── awx-deployment/         # AWX deployment module
-│   └── awx-infrastructure/     # Infrastructure module
-├── aks-operator/               # Direct Kubernetes deployment
-├── aks-helm/                   # Helm chart deployment
-├── azure-vm/                   # Docker Compose on VM
-├── terraform-aks/              # Single environment Terraform
-├── bicep-deployment/           # Azure Bicep templates
-└── azure-container-instances/  # ACI deployment
+├── aks-helm/                   # Helm chart deployment (main method)
+│   ├── awx-operator-chart/     # Downloaded Helm chart
+│   ├── values.yaml             # Main configuration
+│   ├── values-local.yaml       # Local development config
+│   ├── install.sh              # Installation script
+│   ├── install-local.sh        # Local installation script
+│   └── download-chart.sh       # Chart download script
+├── deploy-awx.sh               # Quick deployment script
+├── INSTALLATION.md             # Detailed installation guide
+├── AKS-DEPLOYMENT-STEPS.md     # Step-by-step AKS deployment
+├── COMPANY-CUSTOMIZATION.md    # Enterprise customization guide
+└── README.md                   # This file
 ```
+
+## Configuration Files
+
+- **`aks-helm/values.yaml`**: Main configuration with company customization examples
+- **`aks-helm/values-local.yaml`**: Local development configuration
+- **`deploy-awx.sh`**: Simple deployment script
+- **`aks-helm/install.sh`**: Full deployment with customization
+
+## Enterprise Features
+
+### Company Customization
+- Private container registry support
+- Custom security contexts and RBAC
+- Resource limits and node placement
+- Company-specific annotations and labels
+- Environment variables for integration
+
+### Security
+- Non-root container execution
+- Read-only root filesystem
+- Capability dropping
+- Custom UID/GID ranges
+
+### High Availability
+- Multi-replica operator deployment
+- Pod anti-affinity rules
+- Resource requests and limits
+- Health checks and monitoring
+
+## Documentation
+
+- **[INSTALLATION.md](INSTALLATION.md)**: Complete installation guide
+- **[AKS-DEPLOYMENT-STEPS.md](AKS-DEPLOYMENT-STEPS.md)**: Step-by-step AKS deployment
+- **[COMPANY-CUSTOMIZATION.md](COMPANY-CUSTOMIZATION.md)**: Enterprise customization guide
 
 ## Getting Started
 
-1. **Authentication Setup**
+### 1. AKS Setup (if needed)
 ```bash
+# Login to Azure
 az login
 az account set --subscription "your-subscription-id"
+
+# Get AKS credentials
+az aks get-credentials --resource-group your-rg --name your-aks
 ```
 
-2. **Choose Your Deployment Method**
-   - For production: Use `environments/` with Terraform
-   - For automation: Use `airflow/` DAGs
-   - For quick testing: Use `aks-operator/` or `azure-vm/`
+### 2. Deploy AWX
+```bash
+# Clone repository
+git clone <repository-url>
+cd awx
 
-3. **Follow Environment-Specific Instructions**
-   - See [INSTALLATION.md](INSTALLATION.md) for detailed setup
+# Quick deployment
+./deploy-awx.sh
 
-## Access AWX
+# OR customized deployment
+cd aks-helm
+./download-chart.sh
+./install.sh
+```
 
+### 3. Access AWX
 ```bash
 # Get admin password
-kubectl get secret awx-admin-password -n awx-{environment} -o jsonpath="{.data.password}" | base64 --decode
+kubectl get secret awx-admin-password -n awx -o jsonpath="{.data.password}" | base64 --decode
 
-# Port forward to access UI
-kubectl port-forward svc/awx-service -n awx-{environment} 8080:80
+# Access methods:
+# 1. Port forward: kubectl port-forward svc/awx-service -n awx 8080:80
+# 2. LoadBalancer: kubectl get svc -n awx (get external IP)
 
-# Access via browser: http://localhost:8080
+# Login: http://localhost:8080 or http://<external-ip>
 # Username: admin, Password: (from above command)
 ```
+
+## Customization
+
+For enterprise deployments, customize `aks-helm/values.yaml`:
+
+```yaml
+# Example company customizations
+image:
+  repository: "your-registry.company.com/awx-operator"
+  tag: "2.19.1-company"
+
+serviceAccount:
+  name: "company-awx-operator"
+  annotations:
+    company.com/owner: "platform-team"
+
+resources:
+  limits:
+    cpu: "1000m"
+    memory: "1Gi"
+
+nodeSelector:
+  company.com/node-type: "platform"
+```
+
+See [COMPANY-CUSTOMIZATION.md](COMPANY-CUSTOMIZATION.md) for complete customization options.
+
+## Support
+
+- **AWX Documentation**: https://ansible.readthedocs.io/projects/awx/
+- **Operator Documentation**: https://ansible.readthedocs.io/projects/awx-operator/
+- **Kubernetes Documentation**: https://kubernetes.io/docs/
