@@ -40,21 +40,3 @@ resources:
 nodeSelector: {}
 tolerations: []
 affinity: {}
-
-# AWX Configuration - Enable AWX deployment
-AWX:
-  enabled: true
-  name: awx
-  spec:
-    service_type: LoadBalancer
-    
-  # COMPANY SPECIFIC: AWX instance configuration
-  # labels:
-  #   company.com/environment: "production"
-  #   company.com/team: "platform"
-  # annotations:
-  #   company.com/owner: "platform-team"
-  
-  # PostgreSQL configuration
-  postgres:
-    enabled: true
