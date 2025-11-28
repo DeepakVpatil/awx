@@ -40,3 +40,19 @@ resources:
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+# AWX Configuration with LoadBalancer for AKS
+AWX:
+  enabled: true
+  name: awx
+  spec:
+    service_type: LoadBalancer
+    # AKS LoadBalancer annotations
+    service_annotations:
+      service.beta.kubernetes.io/azure-load-balancer-resource-group: "awx-rg"
+      # service.beta.kubernetes.io/azure-load-balancer-internal: "true"  # Uncomment for internal LB
+      # service.beta.kubernetes.io/azure-load-balancer-internal-subnet: "awx-subnet"  # For internal LB
+    
+  # PostgreSQL configuration
+  postgres:
+    enabled: true

@@ -75,7 +75,8 @@ cd aks-helm
 - Company-specific annotations and labels
 - Environment variables for integration
 
-### Security
+### Security & Authentication
+- LDAP/Active Directory integration
 - Non-root container execution
 - Read-only root filesystem
 - Capability dropping
@@ -92,6 +93,8 @@ cd aks-helm
 - **[INSTALLATION.md](INSTALLATION.md)**: Complete installation guide
 - **[AKS-DEPLOYMENT-STEPS.md](AKS-DEPLOYMENT-STEPS.md)**: Step-by-step AKS deployment
 - **[COMPANY-CUSTOMIZATION.md](COMPANY-CUSTOMIZATION.md)**: Enterprise customization guide
+- **[LDAP-CONFIGURATION.md](LDAP-CONFIGURATION.md)**: LDAP/Active Directory authentication setup
+- **[LOADBALANCER-CONFIGURATION.md](LOADBALANCER-CONFIGURATION.md)**: Azure LoadBalancer setup for external access
 
 ## Getting Started
 
@@ -155,9 +158,20 @@ resources:
 
 nodeSelector:
   company.com/node-type: "platform"
+
+# LDAP Authentication
+AWX:
+  enabled: true
+  spec:
+    extra_settings:
+      - setting: AUTH_LDAP_SERVER_URI
+        value: "ldap://ldap.company.com:389"
+      - setting: AUTH_LDAP_BIND_DN
+        value: "CN=awx-service,OU=Service Accounts,DC=company,DC=com"
 ```
 
 See [COMPANY-CUSTOMIZATION.md](COMPANY-CUSTOMIZATION.md) for complete customization options.
+See [LDAP-CONFIGURATION.md](LDAP-CONFIGURATION.md) for LDAP authentication setup.
 
 ## Support
 
